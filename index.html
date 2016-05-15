@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>叫餐要付多少钱呀</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <h1>叫餐要付多少钱呀 <span>V0.1</span></h1>
+    <div id="app" class="app">
+        <div class="peo">
+            <ul>
+                <li v-for="item in input.items" class="list">
+                    {{ item.id }}号，费用：<input type="text" v-model="item.num" number placeholder="0"> 元 <button v-on:click="remove($index)">X</button>
+                </li>
+            </ul>
+            <a v-on:click="add">增加人数</a>
+
+            <p class="list">配送费：<input type="text" v-model="input.peisong" number placeholder="0"> 元</p>
+            <p class="list">共优惠：<input type="text" v-model="input.youhui" number placeholder="0"> 元</p>
+        </div>
+
+        <div class="res">
+            <h3>结果</h3>
+            <p>总计：{{result.total}}元</p>
+            <ul>
+                <li v-for="item in result.items">
+                    {{ item.id }}号： {{ item.num }}元
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+
+    <script src="vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                input: {
+                    items: [{id: 1,num: ''},{id: 2,num: ''}]
+                },
+                result: {
+                    total: 0,
+                    items: [{id: 1,num: 0},{id: 2,num: 0}]
+                }
+            },
+            watch: {
+                input: {
+                    handler: function(val){
+                        totalFn.call(this,val,listFn);
+                    },
+                    deep: true
+                } 
+                
+            },
+            methods: {
+                add: function(){
+                    this.input.items.push({
+                        id: this.input.items.length + 1
+                    });
+                },
+                remove: function(index){
+                    this.input.items.splice(index,1);
+                    this.input.items.forEach(function(value,index){
+                        value.id = index + 1;
+                    });
+                }
+            }
+        });
+
+        function totalFn(val,cb){
+            var _this = this;
+            var numTo = 0;
+            val.items.forEach(function(value){
+                numTo += value.num ? value.num : 0;
+            });
+            var peisong = this.input.peisong ? +this.input.peisong : 0;
+            var youhui = this.input.youhui ? +this.input.youhui : 0;
+            this.result.totaltr = +numTo;
+            this.result.total = this.result.totaltr  + peisong - youhui;
+            cb && cb.call(this,val);
+        }
+
+        function listFn(val){
+            var items = [];
+            var _this = this;
+            val.items.forEach(function(value,index){
+                var data = {
+                    id: index + 1,
+                    num: allocation(_this.result.totaltr, _this.result.total, value.num)
+                }
+                items.push(data);
+            });
+            this.result.items = items;
+        }
+
+        function allocation(totaltr,total,val){
+            return  val ? val - ( val/totaltr * (totaltr-total) ).toFixed(1) : 0;
+        }
+    </script>
+</body>
+</html>
