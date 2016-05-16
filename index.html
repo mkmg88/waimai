@@ -7,19 +7,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-    <h1>叫餐要付多少钱呀 <span>V0.1</span></h1>
+
+    <h1>叫餐要付多少钱呀 <span>V0.2</span></h1>
     <div id="app" class="app">
         <div class="peo">
             <ul>
                 <li v-for="item in input.items" class="list">
-                    {{ item.id }}号，费用：<input type="text" v-model="item.num" number placeholder="0"> 元 <button v-on:click="remove($index)">X</button>
+                    {{ item.id }}号，费用：<input type="number" v-model="item.num" number placeholder="0"> 元 <button v-on:click="remove($index)">X</button>
                 </li>
             </ul>
             <a v-on:click="add">增加人数</a>
 
-            <p class="list">配送费：<input type="text" v-model="input.peisong" number placeholder="0"> 元</p>
-            <p class="list">共优惠：<input type="text" v-model="input.youhui" number placeholder="0"> 元</p>
+            <p class="list">配送费：<input type="number" v-model="input.peisong" number placeholder="0"> 元</p>
+            <p class="list">共优惠：<input type="number" v-model="input.youhui" number placeholder="0"> 元</p>
         </div>
 
         <div class="res">
@@ -32,7 +32,7 @@
             </ul>
         </div>
     </div>
-    
+
 
     <script src="vue.js"></script>
     <script>
@@ -53,8 +53,8 @@
                         totalFn.call(this,val,listFn);
                     },
                     deep: true
-                } 
-                
+                }
+
             },
             methods: {
                 add: function(){
@@ -72,33 +72,36 @@
         });
 
         function totalFn(val,cb){
-            var _this = this;
-            var numTo = 0;
+            var totalTo = 0;
             val.items.forEach(function(value){
-                numTo += value.num ? value.num : 0;
+                totalTo += toNumber(value.num);
             });
-            var peisong = this.input.peisong ? +this.input.peisong : 0;
-            var youhui = this.input.youhui ? +this.input.youhui : 0;
-            this.result.totaltr = +numTo;
-            this.result.total = this.result.totaltr  + peisong - youhui;
+            this.result.totaltr = totalTo;
+
+            var peisong = toNumber(this.input.peisong);
+            var youhui = toNumber(this.input.youhui);
+
+            this.result.total = toNumber(this.result.totaltr)  + peisong - youhui;
+
             cb && cb.call(this,val);
         }
 
         function listFn(val){
-            var items = [];
-            var _this = this;
-            val.items.forEach(function(value,index){
-                var data = {
+            var items = val.items.map(function(value,index){
+                return {
                     id: index + 1,
-                    num: allocation(_this.result.totaltr, _this.result.total, value.num)
-                }
-                items.push(data);
-            });
+                    num: allocation(this.result.totaltr, this.result.total, value.num)
+                };
+            },this);
             this.result.items = items;
         }
 
         function allocation(totaltr,total,val){
-            return  val ? val - ( val/totaltr * (totaltr-total) ).toFixed(1) : 0;
+            return  toNumber(val - ( val/totaltr * (totaltr-total) ).toFixed(1));
+        }
+
+        function toNumber(val){
+            return val && !isNaN(val) ? parseFloat(val) : 0;
         }
     </script>
 </body>
